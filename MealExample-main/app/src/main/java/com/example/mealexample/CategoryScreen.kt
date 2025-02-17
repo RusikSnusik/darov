@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -19,12 +20,19 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,7 +45,9 @@ import kotlinx.coroutines.flow.StateFlow
 fun CategoryScreen(viewModel: MainViewModel) {
     val categoryState = viewModel.categoryState.collectAsState()
     val chosenCategory = viewModel.chosenCategory.collectAsState()
-    viewModel.getCategory(chosenCategory.value)
+
+    // Состояние для поискового запроса
+    val searchQuery = remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -45,6 +55,22 @@ fun CategoryScreen(viewModel: MainViewModel) {
             .padding(16.dp)
             .background(Color.White)
     ) {
+        TextField(
+            value = searchQuery.value,
+            onValueChange = { searchQuery.value = it },
+            label = { Text("Search by location") },
+            modifier = Modifier.fillMaxWidth(),
+            trailingIcon = {
+                IconButton(onClick = {
+                    if (searchQuery.value.isNotEmpty()) {
+                        viewModel.getMealsByArea(searchQuery.value) // Выполняем поиск при нажатии кнопки
+                    }
+                }) {
+                    Icon(Icons.Filled.Search, contentDescription = "Search")
+                }
+            }
+        )
+
         if (categoryState.value.loading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
         }
@@ -59,7 +85,7 @@ fun CategoryScreen(viewModel: MainViewModel) {
             CategoryItems(categoryState.value.meals)
         } else {
             Text(
-                text = "No meals available",
+                text = "There are no available dishes",
                 color = Color.Gray,
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.align(Alignment.CenterHorizontally)

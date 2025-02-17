@@ -63,6 +63,24 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun getMealsByArea(area: String) {
+        viewModelScope.launch {
+            try {
+                val response = MealService.service.getMealsByArea(area)
+                Log.e("AreaResponse", "AreaMeals: ${response.meals}")
+                _categoryState.value = _categoryState.value.copy(
+                    loading = false,
+                    meals = response.meals
+                )
+            } catch (e: Exception) {
+                _categoryState.value = _categoryState.value.copy(
+                    loading = false,
+                    error = e.message
+                )
+            }
+        }
+    }
+
     data class RecipeState(
         val loading: Boolean = true,
         val list: List<Category> = emptyList(),
